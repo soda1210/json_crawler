@@ -99,7 +99,7 @@ def process_json_file(json_file_path, folder_path):
 
 if __name__ == "__main__":
     # 讀取 json/ 目錄內的所有 JSON 檔案
-    json_files = glob.glob("test_json/*.json")
+    json_files = glob.glob("json/*.json")
 
     if not json_files:
         print("❌ 找不到任何 JSON 檔案，請確認 json/ 目錄內有檔案")
