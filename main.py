@@ -1,12 +1,27 @@
 import os
 import json
 import requests
-import time
 import glob
+import signal
 from selenium import webdriver
 from selenium.webdriver.chrome.service import Service
 from selenium.webdriver.common.by import By
 from webdriver_manager.chrome import ChromeDriverManager
+from concurrent.futures import ThreadPoolExecutor, as_completed
+from selenium.webdriver.support.ui import WebDriverWait
+from selenium.webdriver.support import expected_conditions as EC
+
+# 全域變數來控制是否停止
+stop_processing = False
+
+# 處理停止信號
+def signal_handler(sig, frame):
+    global stop_processing
+    stop_processing = True
+    print("\n⚠️ 收到停止指令，正在停止處理...")
+
+# 設定信號處理器
+signal.signal(signal.SIGINT, signal_handler)
 
 # 設定 Selenium WebDriver
 def setup_driver():
@@ -35,8 +50,45 @@ def write_log(log_path, message):
     with open(log_path, "a", encoding="utf-8") as log_file:
         log_file.write(message + "\n")
 
+# 處理單個廣告
+def process_ad(driver, ad, folder_path, log_path):
+    global stop_processing
+    if stop_processing:
+        return False, None
+
+    ad_id = ad['id']
+    ad_snapshot_url = ad['ad_snapshot_url']
+    
+    print(f"📢 處理廣告 {ad_id}，網址：{ad_snapshot_url}")
+    write_log(log_path, f"📢 開始處理廣告 {ad_id} - {ad_snapshot_url}")
+
+    try:
+        driver.get(ad_snapshot_url)
+        WebDriverWait(driver, 10).until(
+            EC.presence_of_element_located((By.CLASS_NAME, "xz62fqu.xh8yej3.x9ybwvh.x19kjcj4"))
+        )
+
+        # 尋找廣告圖片
+        image_element = driver.find_element(By.CLASS_NAME, "xz62fqu.xh8yej3.x9ybwvh.x19kjcj4")
+        img_url = image_element.get_attribute("src")
+
+        if img_url and download_image(img_url, folder_path, f"{ad_id}.jpg"):
+            print(f"✅ 圖片下載成功: {ad_id}.jpg")
+            write_log(log_path, f"✅ 成功下載: {ad_id}.jpg")
+            return True, None
+        else:
+            print(f"⚠ 無法找到圖片: {ad_id}")
+            write_log(log_path, f"⚠ 失敗: {ad_id} - 沒有圖片")
+            return False, ad_snapshot_url
+
+    except Exception as e:
+        print(f"❌ 發生錯誤（廣告 {ad_id}）: {str(e)}")
+        write_log(log_path, f"❌ 失敗: {ad_id} - {str(e)}")
+        return False, ad_snapshot_url
+
 # 處理 JSON 檔案
 def process_json_file(json_file_path, folder_path):
+    global stop_processing
     driver = setup_driver()  # 啟動 Selenium WebDriver
     log_path = os.path.join(folder_path, "log.txt")  # log 檔案
 
@@ -51,36 +103,17 @@ def process_json_file(json_file_path, folder_path):
         data = json.load(file)
         total_count = len(data)
 
-        for ad in data:
-            ad_id = ad['id']
-            ad_snapshot_url = ad['ad_snapshot_url']
-            
-            print(f"📢 處理廣告 {ad_id}，網址：{ad_snapshot_url}")
-            write_log(log_path, f"📢 開始處理廣告 {ad_id} - {ad_snapshot_url}")
-
-            try:
-                driver.get(ad_snapshot_url)
-                time.sleep(5)  # 等待頁面加載
-
-                # 尋找廣告圖片
-                image_element = driver.find_element(By.CLASS_NAME, "xz62fqu.xh8yej3.x9ybwvh.x19kjcj4")
-                img_url = image_element.get_attribute("src")
-
-                if img_url and download_image(img_url, folder_path, f"{ad_id}.jpg"):
+        with ThreadPoolExecutor(max_workers=5) as executor:
+            futures = [executor.submit(process_ad, driver, ad, folder_path, log_path) for ad in data]
+            for future in as_completed(futures):
+                if stop_processing:
+                    break
+                success, fail_detail = future.result()
+                if success:
                     success_count += 1
-                    print(f"✅ 圖片下載成功: {ad_id}.jpg")
-                    write_log(log_path, f"✅ 成功下載: {ad_id}.jpg")
                 else:
                     fail_count += 1
-                    fail_details.append((ad_id, ad_snapshot_url))
-                    print(f"⚠ 無法找到圖片: {ad_id}")
-                    write_log(log_path, f"⚠ 失敗: {ad_id} - 沒有圖片")
-
-            except Exception as e:
-                fail_count += 1
-                fail_details.append((ad_id, ad_snapshot_url))
-                print(f"❌ 發生錯誤（廣告 {ad_id}）: {str(e)}")
-                write_log(log_path, f"❌ 失敗: {ad_id} - {str(e)}")
+                    fail_details.append(fail_detail)
 
     driver.quit()  # 關閉瀏覽器
 
@@ -106,6 +139,8 @@ if __name__ == "__main__":
         exit(1)
 
     for json_file_path in json_files:
+        if stop_processing:
+            break
         # 取得 JSON 檔名（不含副檔名）
         json_file_name = os.path.splitext(os.path.basename(json_file_path))[0]
 
