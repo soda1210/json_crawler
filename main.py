@@ -145,7 +145,7 @@ if __name__ == "__main__":
         json_file_name = os.path.splitext(os.path.basename(json_file_path))[0]
 
         # 建立對應的資料夾
-        folder_path = os.path.join("images_ver0.1", json_file_name)
+        folder_path = os.path.join("images", json_file_name)
         os.makedirs(folder_path, exist_ok=True)
 
         print(f"\n🚀 開始處理 {json_file_name}，圖片將儲存於 {folder_path}")
