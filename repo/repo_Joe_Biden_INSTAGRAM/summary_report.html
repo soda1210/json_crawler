@@ -1,0 +1,61 @@
+
+            <!DOCTYPE html>
+            <html>
+            <head>
+                <meta charset="UTF-8">
+                <title>Image Analysis Summary Report</title>
+                <style>
+                    body { font-family: Arial, sans-serif; margin: 20px; }
+                    h1, h2 { color: #333; }
+                    .summary { background-color: #f5f5f5; padding: 15px; border-radius: 5px; margin-bottom: 20px; }
+                    .chart-container { margin-bottom: 30px; }
+                    img { max-width: 100%; border: 1px solid #ddd; border-radius: 5px; }
+                    table { border-collapse: collapse; width: 100%; }
+                    th, td { border: 1px solid #ddd; padding: 8px; text-align: left; }
+                    th { background-color: #f2f2f2; }
+                    tr:nth-child(even) { background-color: #f9f9f9; }
+                </style>
+            </head>
+            <body>
+                <h1>Image Analysis Summary Report</h1>
+                
+                <div class="summary">
+                    <h2>Analysis Summary</h2>
+                    <p>Analysis Folder: <strong>images/Joe_Biden_INSTAGRAM</strong></p>
+                    <p>Total Images: <strong>39</strong></p>
+                    <p>Average Unique Colors: <strong>1777.64</strong></p>
+                    <p>Average Main Color Percentage: <strong>39.81%</strong></p>
+                </div>
+                
+                <div class="chart-container">
+                    <h2>Unique Colors Distribution</h2>
+                    <img src="charts/unique_colors_distribution.png" alt="Unique Colors Distribution">
+                </div>
+                
+                <div class="chart-container">
+                    <h2>Main Color Percentage Distribution</h2>
+                    <img src="charts/main_color_percentage_distribution.png" alt="Main Color Percentage Distribution">
+                </div>
+                
+                <div class="chart-container">
+                    <h2>RGB Component Distribution</h2>
+                    <img src="charts/average_color_rgb_distribution.png" alt="RGB Component Distribution">
+                </div>
+                
+                <div class="chart-container">
+                    <h2>Top 10 Most Common Main Colors</h2>
+                    <img src="charts/top_main_colors.png" alt="Top 10 Most Common Main Colors">
+                </div>
+                
+                <div class="chart-container">
+                    <h2>Unique Colors vs Main Color Percentage</h2>
+                    <img src="charts/unique_colors_vs_main_color_percentage.png" alt="Unique Colors vs Main Color Percentage">
+                </div>
+                
+                <div class="chart-container">
+                    <h2>RGB Distribution of Average Colors</h2>
+                    <img src="charts/average_color_rgb_3d.png" alt="RGB Distribution of Average Colors">
+                </div>
+            </body>
+            </html>
+            

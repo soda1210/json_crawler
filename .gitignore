@@ -2,6 +2,7 @@
 test/*
 test_json/*
 json/*
+__MACOSX/*
 
 # Byte-compiled / optimized / DLL files
 __pycache__/
