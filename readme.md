@@ -1,104 +1,160 @@
-# 📌 Facebook 廣告圖片抓取工具
+# 影像分析研究專案
 
-## 📖 專案介紹
-本專案使用 `Selenium` 和 `requests` 自動化從 Facebook 廣告頁面抓取圖片。它會讀取 `json/` 目錄內的 JSON 檔案，
-並自動下載廣告圖片到對應的資料夾，記錄成功與失敗的資訊。
+這個專案包含兩個主要部分：Facebook廣告爬蟲和影像分析工具。專案旨在收集廣告圖片並進行影像分析研究，提供豐富的視覺化報告和數據分析。
 
----
+## 專案特點
 
-## 🚀 功能特色
-- **📂 自動處理 `json/` 內所有 `.json` 檔案**，不需手動指定
-- **📁 每個 JSON 檔案建立專屬資料夾** `images/{json_file_name}/`
-- **🖼️ 下載圖片到對應的資料夾**
-- **📄 記錄 `log.txt`**（包含成功/失敗數量、失敗網址與 ID）
-- **🛡️ 防止中途崩潰**（即時記錄 log）
-- **⚡ Selenium 自動模擬瀏覽器，確保抓取的廣告圖片**
+- **高效的爬蟲系統**：使用Selenium自動化收集Facebook廣告圖片
+- **強大的影像分析**：提取圖片顏色特徵、分布和統計數據
+- **記憶體優化**：支援處理大量高解析度圖片而不會耗盡記憶體
+- **批次處理**：可分批處理大量圖片，避免記憶體溢出
+- **視覺化報告**：自動生成HTML報告和多種視覺化圖表
+- **中斷恢復**：即使在處理中途停止，也會生成部分結果報告
 
----
+## 專案結構
 
-## 📦 安裝與環境設定
-### 1️⃣ 安裝 Python 依賴套件
-請先安裝必要的 Python 套件:
-```sh
+```
+.
+├── data/                  # 資料目錄
+│   ├── json/              # 存放JSON資料檔案
+│   └── images/            # 存放下載的圖片
+├── results/               # 分析結果目錄
+│   └── analysis/          # 影像分析結果
+├── src/                   # 源碼目錄
+│   ├── scrapers/          # 爬蟲相關模組
+│   │   └── ad_scraper.py  # Facebook廣告爬蟲
+│   ├── analysis/          # 分析相關模組
+│   │   └── image_analyzer.py  # 影像分析器
+│   ├── run_scraper.py     # 執行爬蟲的入口點
+│   └── run_analyzer.py    # 執行影像分析的入口點
+├── requirements.txt       # 依賴項列表
+└── README.md              # 專案說明文件
+```
+
+## 安裝
+
+1. 克隆此專案到本地：
+
+```bash
+git clone <專案URL>
+cd <專案目錄>
+```
+
+2. 建立虛擬環境並安裝依賴項：
+
+```bash
+python -m venv .venv
+source .venv/bin/activate  # Linux/Mac
+# 或
+.venv\Scripts\activate     # Windows
+
 pip install -r requirements.txt
 ```
-（或手動安裝）
-```sh
-pip install selenium webdriver-manager requests beautifulsoup4
+
+## 使用方法
+
+### 爬蟲工具
+
+爬蟲工具用於從Facebook廣告庫中下載廣告圖片。
+
+```bash
+python src/run_scraper.py [--json-dir JSON_DIR] [--output-dir OUTPUT_DIR]
 ```
 
-### 2️⃣ 安裝 Chrome 瀏覽器與 WebDriver
-請確保您的電腦已安裝 [Google Chrome](https://www.google.com/chrome/)，並且 WebDriver 版本與瀏覽器版本相符。
+參數說明：
+- `--json-dir`: JSON檔案目錄，預設為 `data/json`
+- `--output-dir`: 圖片輸出目錄，預設為 `data/images`
 
----
+### 影像分析工具
 
-## 🔧 使用方法
-### 1️⃣ 準備 JSON 檔案
-將廣告 JSON 檔案放入 `json/` 目錄，例如：
-```
-json/
-  ├── example.json
-  ├── another_ad.json
+影像分析工具用於分析圖片的顏色分布和特徵。
+
+```bash
+python src/run_analyzer.py --image-dir IMAGE_DIR [--output-dir OUTPUT_DIR] [--threads THREADS] [--batch-size BATCH_SIZE] [--max-memory MAX_MEMORY]
 ```
 
-JSON 格式範例：
-```json
-[
-  {
-    "id": "12345",
-    "ad_snapshot_url": "https://www.facebook.com/ads/xyz123"
-  },
-  {
-    "id": "67890",
-    "ad_snapshot_url": "https://www.facebook.com/ads/abc456"
-  }
-]
+參數說明：
+- `--image-dir`: 圖片來源目錄（必須指定）
+- `--output-dir`: 分析結果輸出目錄，預設為 `results/analysis`
+- `--threads`: 執行緒數量，預設為 4
+- `--batch-size`: 批次處理的圖片數量，預設為 0（處理所有圖片）
+- `--max-memory`: 最大記憶體使用量(GB)，預設為 0（不限制）
+
+例如：
+```bash
+python src/run_analyzer.py --image-dir images/Donald_J_Trump_FACEBOOK(1) --output-dir test_analyzer --threads 8 --batch-size 20 --max-memory 4
 ```
 
-### 2️⃣ 執行腳本
-```sh
-python main.py
-```
-程式會自動讀取 `json/` 內的所有 JSON 檔案，下載對應的廣告圖片，並儲存到 `images/{json_file_name}/`。
+## 功能說明
 
-### 3️⃣ 檢查下載結果
-每個 JSON 檔案會建立對應的資料夾，下載的圖片與 `log.txt` 會存放於：
-```
-images/
-  ├── example/
-  │   ├── 12345.jpg
-  │   ├── 67890.jpg
-  │   ├── log.txt
-  ├── another_ad/
-      ├── abc.jpg
-      ├── def.jpg
-      ├── log.txt
-```
+### 爬蟲功能
 
----
+- **自動化收集**：從JSON檔案中讀取廣告資訊，使用Selenium訪問Facebook廣告快照頁面
+- **多執行緒下載**：支援多執行緒同時處理多個廣告，提高效率
+- **錯誤處理**：完善的錯誤處理和日誌記錄，確保穩定運行
+- **優雅中斷**：支援通過Ctrl+C或停止檔案安全地中斷處理
 
-## 📜 Log 紀錄格式
-- `✅ 成功: 12345.jpg` → 下載成功
-- `❌ 失敗: 67890 - 找不到圖片` → 下載失敗
-- `📊 結果總結: 總數: 10 | 成功: 8 | 失敗: 2`
+### 影像分析功能
 
----
+- **顏色分析**：
+  - 提取圖片主要顏色（使用K-Means聚類）
+  - 計算圖片唯一顏色數量
+  - 計算平均顏色
+  - 生成RGB直方圖
 
-## ❗ 注意事項
-1. **請確保 JSON 檔案內的 `ad_snapshot_url` 有效**
-2. **Facebook 可能會變更 HTML 結構**，導致 `Selenium` 無法找到圖片，請適時調整 `find_element` 條件
-3. **若 Selenium 下載圖片失敗**，可能是 `headless` 模式受限制，可嘗試移除 `--headless` 參數
+- **視覺化報告**：
+  - 唯一顏色數量分布圖
+  - 主要顏色佔比分布圖
+  - 平均顏色RGB分量分布
+  - 最常見的10種主要顏色
+  - 唯一顏色數量vs主要顏色佔比散點圖
+  - 平均顏色的RGB 3D散點圖
 
----
+- **記憶體優化**：
+  - 支援批次處理大量圖片
+  - 自動縮放大型圖片以節省記憶體
+  - 監控記憶體使用量，避免溢出
+  - 定期執行垃圾回收
 
-## 🛠️ 技術細節
-- `Selenium WebDriver` 用於模擬瀏覽器開啟 Facebook 廣告頁面
-- `requests` 用於下載圖片
-- `glob` 自動掃描 `json/` 內的所有 JSON 檔案
-- `log.txt` 即時紀錄下載狀況，防止中途崩潰導致資料遺失
+- **中斷處理**：
+  - 支援通過Ctrl+C安全地中斷處理
+  - 即使在中途停止，也會生成部分結果報告
+  - 可以通過建立`stop.txt`檔案來停止處理
 
----
+## 分析報告
 
-## 🏆 授權 & 版權
-本專案僅供學術與研究用途，請勿用於違反 Facebook 條款的行為。
+分析完成後，會在輸出目錄生成以下檔案：
+
+- `result.csv`：包含所有圖片分析結果的詳細數據
+- `charts/`目錄：包含所有生成的圖表
+- `summary_report.html`：包含所有圖表和摘要的HTML報告
+
+HTML報告提供了直觀的視覺化展示，包括：
+- 分析摘要（總圖片數量、平均唯一顏色數量、平均主要顏色佔比等）
+- 所有生成的圖表，並附有說明
+
+## 注意事項
+
+- 請確保在執行爬蟲前，`data/json/`目錄中已有正確格式的JSON檔案
+- 影像分析需要指定有效的圖片目錄
+- 處理大量圖片時，建議使用批次處理和記憶體限制
+- 對於8GB RAM的系統，建議設置`--max-memory 4`
+- 對於16GB RAM的系統，建議設置`--max-memory 8`
+- 批次大小可以從10-50開始嘗試，根據實際情況調整
+- 如果遇到記憶體問題，可以嘗試減少執行緒數量
+
+## 依賴項
+
+主要依賴項包括：
+- selenium：用於網頁自動化
+- requests：用於HTTP請求
+- opencv-python：用於圖片處理
+- numpy：用於數值計算
+- matplotlib：用於繪製圖表
+- pandas：用於數據處理
+- scikit-learn：用於K-Means聚類
+- seaborn：用於統計數據視覺化
+- psutil：用於監控記憶體使用量
+
+完整依賴項請參見`requirements.txt`。
 
